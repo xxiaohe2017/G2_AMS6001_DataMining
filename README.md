@@ -1,15 +1,13 @@
 # Heart Attack Analysis & Prediction (R)
 
-##A dataset for heart attack classification in kaggle
+## A dataset for heart attack classification in kaggle
 https://www.kaggle.com/datasets/rashikrahmanpritom/heart-attack-analysis-prediction-dataset/code?datasetId=1226038&searchQuery=clust#
-
-R 
 
 In this analysis ,I want to embark on a comprehensive exploratory data analysis (EDA) journey, discerning the distribution of individual features, and examining the relationships among them. 
 I aim to employ cluster analysis, a method that allows us to group similar data instances based on their feature similarities. This could reveal underlying patterns or subgroups within the data, which might be indicative of specific risk groups or heart disease profiles.
 
 The dataset, composed of both categorical and numerical data, provides a comprehensive snapshot of factors potentially contributing to heart diseases, including demographic details like ageand sex, clinical parameters like chest pain type (cp), resting blood pressure (trtbps), serum cholesterol (chol), fasting blood sugar (fbs), and resting electrocardiographic results (restecg), among others. Each feature encapsulates a different aspect of an individual's health profile, potentially playing a role in heart disease development. Moreover, the inclusion of the output variable indicating the diagnosis of heart disease presents an opportunity to develop predictive models that could help in early detection and prevention of this deadly disease.
-##About this dataset
+## About this dataset
 Age : Age of the patient
 Sex : Sex of the patient
 exang: exercise induced angina (1 = yes; 0 = no)
