@@ -8,7 +8,6 @@ library(cluster)
 
 
 heartdata= read.csv("dataset/heart.csv")
-class(heartdata)
 
 #Exploring data with 0,1 values as they won't be of much help in making the clusters
 heartdata_c = heartdata[,-which(colnames(heartdata) %in% c("sex","fbs","exng","output"))]
@@ -25,7 +24,8 @@ heartdata_clustered
 ggplot(heartdata_clustered, aes(x = heartdata_clustered$age, y = heartdata_clustered$thalachh, color = cluster)) + geom_point()
 #actual output
 ggplot(heartdata, aes(x = heartdata$age, y = heartdata$thalachh, color = heartdata$output)) + geom_point()
-
-
+acc = ifelse((heartdata_clustered$cluster == heartdata$output) | (heartdata_clustered$cluster== heartdata$output+2),"Y","N")
+sum(acc=="Y")/length(heartdata$output)
+# 0.7821782
 
 
