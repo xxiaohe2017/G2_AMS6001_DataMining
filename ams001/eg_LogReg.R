@@ -2,65 +2,98 @@
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+#regsubsets for BACKWARD selection
+install.packages("leaps")
+library(leaps)
+# Lasso
+install.packages("glmnet")
+library(ISLR)
+library(glmnet)
 
 # Read the dataset
-heart_data <- read.csv("Heart.csv")
+heartdata <- read.csv("Heart.csv")
 
 # Data Cleaning
 
 # Check for missing values
-missing_values <- colSums(is.na(heart_data))
-print(missing_values)
+missing_values <- colSums(is.na(df))
+print(missing_values)  # no missing value
 
 # Handle missing values if any (e.g., imputation)
-
+#heartdata<- na.omit(heartdata)
+#df <- subset(heartdata, !(rowSums(heartdata == 0) == ncol(heartdata)))
 # Data Analysis
 
 # Summary statistics
-summary(heart_data)
-
-# Explore the distribution of variables
-ggplot(heart_data, aes(x = age)) +
-  geom_histogram(binwidth = 5, fill = "lightblue", color = "black") +
-  labs(x = "Age", y = "Count", title = "Distribution of Age")
-
-# Explore the relationship between variables
-ggplot(heart_data, aes(x = age, y = chol, color = output)) +
-  geom_point() +
-  labs(x = "Age", y = "Cholesterol", title = "Age vs. Cholesterol by Output")
-
-# Explore categorical variables
-table(heart_data$sex)
-table(heart_data$exng)
-
-# Perform additional data cleaning and analysis as needed
+summary(heartdata)
 
 # Data Mining (Model Building)
 
-# Prepare the data for modeling (e.g., feature encoding, normalization)
-
 # Split the data into training and testing sets
-set.seed(123) # for reproducibility
-train_indices <- sample(1:nrow(heart_data), 0.7 * nrow(heart_data))
-train_data <- heart_data[train_indices, ]
-test_data <- heart_data[-train_indices, ]
+set.seed(12345) # for reproducibility
+train_indices <- sample(1:nrow(heartdata), 0.7 * nrow(heartdata))
+train_data <- heartdata[train_indices, ]
+test_data <- heartdata[-train_indices, ]
 
 # Build a predictive model (e.g., logistic regression, decision tree, random forest)
-# Example using logistic regression
-model <- glm(output ~ age + sex + exng + caa + cp + trtbps + chol + fbs + restecg +
+# Example using logistic regression use all predictors
+model_LG <- glm(output ~ age + sex + exng + caa + cp + trtbps + chol + fbs + restecg +
                thalachh + slp + oldpeak + thall, data = train_data, family = "binomial")
 
 # Model Evaluation
-predicted_output <- predict(model, newdata = test_data, type = "response")
+predicted_output <- predict(model_LG, newdata = test_data, type = "response")
 predicted_labels <- ifelse(predicted_output > 0.5, 1, 0)
 accuracy <- mean(predicted_labels == test_data$output)
 print(paste("Accuracy:", accuracy))
+# Accuracy: 0.8462
 
-# Further model evaluation and refinement as needed
 
 # Perform additional data mining tasks (e.g., feature selection, model comparison)
+#Select a model with BACKWARD selection approach.
+result.all <-regsubsets(output ~ age + sex + exng + caa + cp + trtbps + chol + fbs + restecg +
+     thalachh + slp + oldpeak + thall, data = train_data, method = "backward")
+summary(result.all)
+summary(result.all)$bic
+
+plot( summary(result.all)$bic, type="l", ylab="BIC")
+# select 7 predictors when BIC is smallest
+model_bw <-glm(output ~  sex + exng + caa + cp + thalachh + oldpeak 
+               + thall, data = train_data, family = "binomial")
+predicted_bw <- predict(model_bw, newdata = test_data, type = "response")
+predictedbw_labels <- ifelse(predicted_bw > 0.5, 1, 0)
+accuracy_bw <- mean(predictedbw_labels == test_data$output)
+# accuracy_bw  0.8131
+
+# LASSO regression cross-validation 10 folds
+x=model.matrix(output~., train_data)[,-1]       # Get the design matrix. Dummy variables for categorical data are added. The column of ones (corresponding to the intercept term) is removed.
+y=train_data$output
+
+cv.out = cv.glmnet(x,y,alpha=1,nfolds = 10)
+bestlam = cv.out$lambda.min
+coef = predict(cv.out ,type="coefficients",s=bestlam)
+coef 
+# remove chol or fbs 
+sub_model <- glm(output ~  age + sex + exng + cp + trtbps +restecg + thalachh + oldpeak +fbs 
+                 +slp +caa + thall , data = train_data, family = "binomial")
+predicted_LS <- predict(sub_model, newdata = test_data, type = "response")
+predictedLS_labels <- ifelse(predicted_LS > 0.5, 1, 0)
+accuracy_LS <- mean(predictedLS_labels == test_data$output)
+# accuracy_LS   0.8462
+
+# try standardizing X before using cv.glmnet to do LASSO
+x1=scale(x)     
+
+cv_s.out = cv.glmnet(x1,y,alpha=1,nfolds = 10)
+bestlam_s = cv_s.out$lambda.min
+coef_s = predict(cv_s.out ,type="coefficients",s=bestlam_s)
+coef_s
+# also remove chol or fbs,  no improvement
+
+
 
 # Finalize the model for deployment
+final_model <- glm(output ~  age + sex + exng + cp + trtbps +restecg + thalachh + oldpeak +fbs 
+                 +slp +caa + thall , data = train_data, family = "binomial")
 
 # Optional: Export the cleaned and analyzed dataset for future use
 # write.csv(cleaned_data, "cleaned_heart_data.csv")
